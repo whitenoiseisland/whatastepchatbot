@@ -1,92 +1,4 @@
-# pip install fastapi uvicorn requests
-# pip install "fastapi[all]"
-
-
-# from fastapi import FastAPI, HTTPException
-# from fastapi.middleware.cors import CORSMiddleware
-# from fastapi.staticfiles import StaticFiles
-# from pydantic import BaseModel
-# import requests
-# import json
-# import re
-
-# app = FastAPI()
-
-# # Allow CORS for all origins
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],  # Allow all origins
-#     allow_credentials=True,
-#     allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
-#     allow_headers=["*"],  # Allow all headers
-# )
-
-# # Serve static files (e.g., index.html) from the /static folder
-# app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# class ChatRequest(BaseModel):
-#     prompt: str
-
-# OLLAMA_URL = "http://localhost:11434/api/generate"
-
-# # Career counselor system instructions
-# SYSTEM_INSTRUCTIONS = """
-# You are an expert career counselor with deep knowledge of various professions, industries, and career paths. Your purpose is to help users discover professional paths that align with their interests, skills, values, and goals.
-
-# Guidelines:
-# 1. Only respond to questions related to career guidance, professional development, and job search advice.
-# 2. For unrelated questions, politely redirect the conversation to career topics.
-# 3. Help users identify their strengths, interests, and values to find suitable career paths.
-# 4. Provide practical, actionable advice for career transitions and professional growth.
-# 5. Be encouraging, supportive, and empathetic in your responses.
-# 6. When appropriate, ask clarifying questions to better understand the user's situation.
-# 7. Base your recommendations on the user's unique circumstances and preferences.
-# 8. Avoid making absolute statements about which path is "best" - focus on helping users make informed decisions.
-
-# Remember: Your goal is to empower users to make informed career decisions that align with their personal and professional aspirations.
-# """
-
-# @app.post("/chat")
-# async def chat(request: ChatRequest):
-#     try:
-#         # Combine system instructions with user prompt
-#         full_prompt = f"{SYSTEM_INSTRUCTIONS}\n\nUser: {request.prompt}\nCareer Counselor:"
-        
-#         response = requests.post(
-#             OLLAMA_URL, 
-#             json={"model": "deepseek-r1", "prompt": full_prompt}, # deepseek-r1:14b
-#             stream=True
-#         )
-        
-#         result = ""
-#         for line in response.iter_lines():
-#             if line:
-#                 try:
-#                     chunk_data = json.loads(line.decode("utf-8"))
-#                     if "response" in chunk_data:
-#                         result += chunk_data["response"]
-#                 except json.JSONDecodeError:
-#                     continue  # Ignore invalid JSON lines
-        
-#         if not result:
-#             raise HTTPException(status_code=500, detail="No response from model")
-        
-#         # Clean the result by removing tags and extra whitespace
-#         clean_result = re.sub(r'<.*?>', '', result)  # Remove all tags (like <think>)
-#         clean_result = clean_result.strip()  # Remove extra spaces
-#         clean_result = re.sub(r'\n+', ' ', clean_result)  # Replace multiple newlines with space
-        
-#         return {"response": clean_result}
-    
-#     except requests.exceptions.RequestException as e:
-#         raise HTTPException(status_code=500, detail=f"Request error: {str(e)}")
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
-
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
-
+from fastapi.responses import FileResponse
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -159,6 +71,11 @@ async def chat(request: ChatRequest):
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+# Add this new route to serve index.html at the root URL
+@app.get("/")
+async def serve_index():
+    return FileResponse("static/index.html")
 
 if __name__ == "__main__":
     import uvicorn
