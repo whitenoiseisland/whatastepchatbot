@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Guidance Assistant</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            margin: 0; 
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        #chat-box { 
+            width: 100%; 
+            max-width: 700px; 
+            margin: auto; 
+            border: 1px solid #ddd; 
+            border-radius: 8px;
+            padding: 15px; 
+            height: 450px; 
+            overflow-y: scroll; 
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        .input-area {
+            display: flex;
+            max-width: 700px;
+            margin: 15px auto;
+        }
+        input { 
+            flex: 1;
+            padding: 12px; 
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+            font-size: 16px;
+        }
+        button { 
+            padding: 12px 20px; 
+            background-color: #3498db; 
+            color: white; 
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .user-message { 
+            background-color: #f1f8ff; 
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 18px 18px 18px 0;
+            margin: 10px 0;
+            max-width: 80%;
+            align-self: flex-start;
+        }
+        .ai-message { 
+            background-color: #e1f5fe; 
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 18px 18px 0 18px;
+            margin: 10px 0 10px auto;
+            max-width: 80%;
+            align-self: flex-end;
+        }
+        .message-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .typing-indicator {
+            color: #888;
+            font-style: italic;
+            margin: 10px 0;
+            display: none;
+        }
+        .welcome-message {
+            text-align: center;
+            color: #7f8c8d;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Career Guidance Assistant</h2>
+        <p class="subtitle">Ask me about career paths, job opportunities, or professional development</p>
+        
+        <div id="chat-box">
+            <div class="welcome-message">
+                <p>Welcome! I'm your career counselor. How can I help with your professional journey today?</p>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Ask about career options, skills assessment, etc..." autocomplete="off">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        
+        <div class="typing-indicator" id="typing-indicator">AI is thinking...</div>
+    </div>
+    
+    <script>
+        // Handle Enter key press
+        document.getElementById("user-input").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+        
+        async function sendMessage() {
+            let inputField = document.getElementById("user-input");
+            let message = inputField.value.trim();
+            if (!message) return;
+            
+            let chatBox = document.getElementById("chat-box");
+            
+            // Display user's message
+            let messageContainer = document.createElement("div");
+            messageContainer.classList.add("message-container");
+            
+            let userMessage = document.createElement("div");
+            userMessage.classList.add("user-message");
+            userMessage.textContent = message;
+            messageContainer.appendChild(userMessage);
+            chatBox.appendChild(messageContainer);
+            
+            // Clear input field immediately
+            inputField.value = "";
+            
+            // Show typing indicator
+            document.getElementById("typing-indicator").style.display = "block";
+            
+            // Scroll to the bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            try {
+                // Send the prompt to the backend
+                let response = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ prompt: message })
+                });
+                
+                let data = await response.json();
+                
+                // Hide typing indicator
+                document.getElementById("typing-indicator").style.display = "none";
+                
+                // Handle undefined or empty AI response
+                let aiResponse = data.response || "I'm sorry, I couldn't process that. Can you please try again?";
+                
+                // Display AI's response
+                let aiMessageContainer = document.createElement("div");
+                aiMessageContainer.classList.add("message-container");
+                
+                let aiMessage = document.createElement("div");
+                aiMessage.classList.add("ai-message");
+                aiMessage.textContent = aiResponse;
+                aiMessageContainer.appendChild(aiMessage);
+                chatBox.appendChild(aiMessageContainer);
+                
+            } catch (error) {
+                // Hide typing indicator
+                document.getElementById("typing-indicator").style.display = "none";
+                
+                // Display error message
+                let errorContainer = document.createElement("div");
+                errorContainer.classList.add("message-container");
+                
+                let errorMessage = document.createElement("div");
+                errorMessage.classList.add("ai-message");
+                errorMessage.textContent = "Sorry, there was an error connecting to the service. Please try again later.";
+                errorContainer.appendChild(errorMessage);
+                chatBox.appendChild(errorContainer);
+                
+                console.error("Error:", error);
+            }
+            
+            // Scroll to the bottom of the chat box
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
